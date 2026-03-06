@@ -2,183 +2,187 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tabriz Group - Печать Этикеток</title>
+    <title>Tabriz Group - Система управления кроем</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --border-clr: #000; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; background: #f0f2f5; }
+        body { font-family: Arial, sans-serif; background: #eef2f7; margin: 0; padding: 20px; }
+        .no-print { display: block; }
         
-        /* Панель управления */
-        .admin-panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .file-upload { border: 2px dashed #007bff; padding: 20px; text-align: center; cursor: pointer; border-radius: 8px; }
-        
-        /* Список деталей (Крой-лист) */
-        .parts-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
-        .part-item { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; }
-        .part-item:hover { border-color: #007bff; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .part-item b { font-size: 1.2em; display: block; margin-bottom: 5px; }
-
-        /* Дизайн этикетки (как на фото) */
-        #print-area { display: none; }
-        .label-box {
-            width: 100mm; height: 80mm; /* Примерный размер термоэтикетки */
-            background: white; border: 1px solid black;
-            padding: 5px; position: relative; box-sizing: border-box;
-            color: black; page-break-after: always;
+        /* Стили карты раскроя */
+        .layout-container { background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .layout-canvas { 
+            position: relative; background: #ffa500; border: 2px solid #333; 
+            margin-top: 20px; overflow: hidden; 
         }
+        .part-block { 
+            position: absolute; border: 1px solid #000; background: #ff9800; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;
+        }
+        .part-block:hover { background: #e68a00; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+
+        /* ТОЧНЫЙ ДИЗАЙН ЭТИКЕТКИ */
+        #print-area { display: none; }
+        .label-sticker {
+            width: 100mm; height: 80mm; background: white; padding: 5px;
+            position: relative; box-sizing: border-box; color: black; border: 1px solid #ccc;
+        }
+        .label-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-main { font-size: 24px; font-weight: 900; letter-spacing: 2px; }
+        .logo-main span { font-size: 14px; font-weight: normal; }
+        .logo-academy { text-align: center; font-size: 7px; font-weight: bold; width: 80px; }
+
+        .info-row { font-size: 13px; margin: 2px 0; }
+        .size-display { font-size: 36px; font-weight: bold; text-align: center; margin: 10px 0; }
         
-        .header-top { display: flex; justify-content: space-between; align-items: start; }
-        .main-logo { width: 180px; font-weight: 900; font-size: 22px; letter-spacing: 1px; }
-        .sub-logo { width: 80px; text-align: center; font-size: 8px; font-weight: bold; line-height: 1; }
-        
-        .info-grid { font-size: 12px; margin-top: 5px; line-height: 1.3; }
-        .pvc-badges { display: flex; gap: 10px; margin: 10px 0; }
-        .pvc-item { border: 1.5px solid black; padding: 2px 8px; font-size: 14px; font-weight: bold; width: 110px; text-align: center; }
-        
-        .main-dimensions { font-size: 32px; font-weight: bold; text-align: center; margin: 5px 0; }
-        
-        .drawing-area { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
-        .rect-draw { width: 120px; height: 70px; border: 2px solid black; position: relative; margin-left: 40px; }
-        .dim-label { position: absolute; font-size: 10px; font-weight: bold; }
-        
-        .qr-codes-right { position: absolute; right: 5px; top: 110px; display: flex; flex-direction: column; gap: 15px; }
-        .qr-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: bold; }
-        
-        .timestamp { position: absolute; right: 5px; bottom: 5px; font-size: 9px; }
+        .pvc-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 5px 0; }
+        .pvc-item { border: 1.5px solid black; text-align: center; font-weight: bold; font-size: 14px; padding: 2px; }
+
+        .draw-container { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .rect-preview { width: 140px; height: 80px; border: 2px solid black; position: relative; margin-left: 20px; }
+        .rect-dim { position: absolute; font-size: 10px; font-weight: bold; }
+
+        .qr-stack { position: absolute; right: 5px; top: 100px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .qr-wrap { text-align: center; font-size: 9px; font-weight: bold; }
+        .timestamp { position: absolute; right: 5px; bottom: 5px; font-size: 10px; }
 
         @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { display: block; position: absolute; left: 0; top: 0; width: 100%; }
-            .admin-panel, .parts-list { display: none !important; }
+            .no-print { display: none; }
+            #print-area { display: block; }
+            body { padding: 0; background: white; }
+            .label-sticker { border: none; page-break-after: always; }
         }
     </style>
 </head>
 <body>
 
-<div class="admin-panel">
-    <h2 style="margin-top:0">TABRIZ GROUP | Система маркировки</h2>
-    <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-        Нажмите, чтобы загрузить файл <b>.CUT</b> (AutoCUT)
-        <input type="file" id="fileInput" accept=".CUT,.xml" style="display:none">
+<div class="no-print">
+    <div class="layout-container">
+        <h2>Оператор: Выберите деталь из кроя</h2>
+        <input type="file" id="fileInput" accept=".CUT">
+        <div id="visual-layout"></div>
     </div>
-    <div id="fileInfo" style="margin-top:10px; font-weight:bold; color:#007bff"></div>
 </div>
 
-<div class="parts-list" id="partsContainer">
-    </div>
-
-<div id="print-area">
-    </div>
+<div id="print-area"></div>
 
 <script>
-    let currentProject = {};
+    let xmlData = null;
+    const SCALE = 0.3; // Масштаб для отображения на экране
 
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
-        if (!file) return;
-
-        document.getElementById('fileInfo').innerText = "Загружен файл: " + file.name;
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function(event) {
             const parser = new DOMParser();
-            const xml = parser.parseFromString(e.target.result, "text/xml");
-            
-            // Собираем данные проекта 
-            currentProject = {
-                name: xml.querySelector('Project').getAttribute('Name'),
-                material: xml.querySelector('Data').getAttribute('TypeName'),
-                date: xml.querySelector('Project').getAttribute('Update')
-            };
-
-            const shapes = xml.querySelectorAll('Objective Shape');
-            renderPartsList(shapes);
+            xmlData = parser.parseFromString(event.target.result, "text/xml");
+            renderLayouts();
         };
         reader.readAsText(file);
     });
 
-    function renderPartsList(shapes) {
-        const container = document.getElementById('partsContainer');
+    function renderLayouts() {
+        const container = document.getElementById('visual-layout');
         container.innerHTML = '';
+        const layouts = xmlData.querySelectorAll('Layout');
 
-        shapes.forEach(shape => {
-            const count = parseInt(shape.getAttribute('Count'));
-            if (count > 0) {
-                const item = document.createElement('div');
-                item.className = 'part-item';
-                item.innerHTML = `
-                    <b>Деталь: ${shape.getAttribute('Name')}</b>
-                    <span>Размер: ${shape.getAttribute('X')} x ${shape.getAttribute('Y')}</span><br>
-                    <span>Кол-во: ${count} шт.</span>
-                `;
-                item.onclick = () => generateLabel(shape);
-                container.appendChild(item);
-            }
+        layouts.forEach((layout, index) => {
+            const w = parseFloat(layout.getAttribute('X'));
+            const h = parseFloat(layout.getAttribute('Y'));
+            
+            const layoutDiv = document.createElement('div');
+            layoutDiv.className = 'layout-canvas';
+            layoutDiv.style.width = (w * SCALE) + 'px';
+            layoutDiv.style.height = (h * SCALE) + 'px';
+            layoutDiv.innerHTML = `<div style="position:absolute; top:-20px; font-weight:bold">Лист №${index+1} (${w}x${h})</div>`;
+
+            // Ищем все детали (Part) внутри Layout, у которых есть UID (это конечные детали)
+            const parts = layout.querySelectorAll('Part[UID]');
+            parts.forEach(part => {
+                const px = parseFloat(part.getAttribute('Px')) || 0;
+                const py = parseFloat(part.getAttribute('Py')) || 0;
+                const pw = parseFloat(part.getAttribute('X'));
+                const ph = parseFloat(part.getAttribute('Y'));
+                const uid = part.getAttribute('UID');
+
+                const block = document.createElement('div');
+                block.className = 'part-block';
+                block.style.left = (px * SCALE) + 'px';
+                block.style.top = (py * SCALE) + 'px';
+                block.style.width = (pw * SCALE) + 'px';
+                block.style.height = (ph * SCALE) + 'px';
+                block.innerText = uid;
+                
+                block.onclick = () => preparePrint(part, uid);
+                layoutDiv.appendChild(block);
+            });
+            container.appendChild(layoutDiv);
+            container.appendChild(document.createElement('hr'));
         });
     }
 
-    function generateLabel(shape) {
+    function preparePrint(partNode, uid) {
         const printArea = document.getElementById('print-area');
-        const name = shape.getAttribute('Name');
-        const x = shape.getAttribute('X');
-        const y = shape.getAttribute('Y');
+        const project = xmlData.querySelector('Project').getAttribute('Name');
+        const material = xmlData.querySelector('Data').getAttribute('TypeName');
+        const x = partNode.getAttribute('X');
+        const y = partNode.getAttribute('Y');
         const now = new Date().toLocaleString();
 
+        // Ищем имя детали (P1, P2...) по UID в секции Objective
+        const objectiveShape = xmlData.querySelector(`Objective Shape[Name="P${uid}"]`) || 
+                               xmlData.querySelector(`Objective Shape[Name="${uid}"]`);
+        const partName = objectiveShape ? objectiveShape.getAttribute('Name') : "ID:" + uid;
+
         printArea.innerHTML = `
-            <div class="label-box">
-                <div class="header-top">
-                    <div class="main-logo">TABRIZ <small>GROUP</small></div>
-                    <div class="sub-logo">MUSTAFAYEV<br>ACADEMY</div>
+            <div class="label-sticker">
+                <div class="label-header">
+                    <div class="logo-main">TABRIZ <span>GROUP</span></div>
+                    <div class="logo-academy">Ⓜ️ MUSTAFAYEV<br>ACADEMY</div>
                 </div>
 
-                <div class="info-grid">
-                    <div>Mat: ${currentProject.material}</div>
-                    <div>№ : ${name}</div>
-                    <div style="display:flex; justify-content:space-between">
-                        <span>Model: ${currentProject.name}</span>
-                        <span>Soni: 1</span>
-                    </div>
-                    <div>Nomi: Деталь мебели</div>
+                <div class="info-row">Mat: ${material}</div>
+                <div class="info-row">№ : ${partName}</div>
+                <div class="info-row" style="display:flex; justify-content:space-between">
+                    <span>Model: ${project}</span>
+                    <span>Soni: 1</span>
                 </div>
+                <div class="info-row">Nomi: Деталь мебели</div>
 
-                <div class="pvc-badges">
+                <div class="pvc-box">
                     <div class="pvc-item">ПВХ 0.4 / 19</div>
                     <div class="pvc-item">ПВХ 0.4 / 19</div>
                 </div>
 
-                <div class="main-dimensions">${x} x ${y}</div>
+                <div class="size-display">${x} x ${y}</div>
 
-                <div class="pvc-badges">
+                <div class="pvc-box">
                     <div class="pvc-item">ПВХ 2 / 19</div>
                     <div class="pvc-item">ПВХ 2 / 19</div>
                 </div>
 
-                <div class="drawing-area">
-                    <div class="rect-draw">
-                        <div class="dim-label" style="top:-15px; left:40%">(X) 2</div>
-                        <div class="dim-label" style="bottom:-15px; left:40%">(X) 2</div>
-                        <div class="dim-label" style="left:-35px; top:40%; transform:rotate(-90deg)">(X) 2</div>
-                        <div class="dim-label" style="right:-35px; top:40%; transform:rotate(90deg)">(X) 2</div>
-                        <div style="position:absolute; right:-45px; bottom:0; font-size:8px">${y}</div>
-                        <div style="position:absolute; bottom:-25px; left:35%; font-size:8px">${x}</div>
+                <div class="draw-container">
+                    <div class="rect-preview">
+                        <div class="rect-dim" style="top:-15px; left:40%">(X) 2</div>
+                        <div class="rect-dim" style="bottom:-15px; left:40%">(X) 2</div>
+                        <div class="rect-dim" style="left:-35px; top:40%; transform:rotate(-90deg)">(X) 2</div>
+                        <div class="rect-dim" style="right:-35px; top:40%; transform:rotate(90deg)">(X) 2</div>
                     </div>
                 </div>
 
-                <div class="qr-codes-right">
-                    <div class="qr-item"><div id="qr1"></div>01_025_1_1</div>
-                    <div class="qr-item"><div id="qr2"></div>01_025_1_2</div>
+                <div class="qr-stack">
+                    <div class="qr-wrap"><div id="q1"></div>01_025_1_1</div>
+                    <div class="qr-wrap"><div id="q2"></div>01_025_1_2</div>
                 </div>
 
                 <div class="timestamp">${now}</div>
             </div>
         `;
 
-        // Генерация QR-кодов
-        new QRCode(document.getElementById("qr1"), { text: name + "_1", width: 50, height: 50 });
-        new QRCode(document.getElementById("qr2"), { text: name + "_2", width: 50, height: 50 });
+        new QRCode(document.getElementById("q1"), { text: uid + "_1", width: 55, height: 55 });
+        new QRCode(document.getElementById("q2"), { text: uid + "_2", width: 55, height: 55 });
 
-        window.print();
+        setTimeout(() => { window.print(); }, 300);
     }
 </script>
 
