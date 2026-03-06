@@ -2,85 +2,65 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Tabriz Group - Печать 80x60</title>
+    <title>Tabriz Group - Печать по листам</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef2f7; margin: 0; padding: 20px; }
-        .no-print { display: block; max-width: 800px; margin: 0 auto; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .no-print { max-width: 900px; margin: 0 auto; }
+        .panel { background: white; padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        h2 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 1.4em; }
         
-        /* Стили панелей управления */
-        .panel { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { margin-top: 0; color: #333; }
-        
-        /* Кнопки листов */
-        .sheets-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-        .sheet-btn { padding: 12px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
-        .sheet-btn:hover { background: #0056b3; }
-        .sheet-btn.active { background: #28a745; box-shadow: 0 0 0 3px rgba(40,167,69,0.3); }
+        .sheets-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
+        .sheet-btn { padding: 15px 25px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .sheet-btn:hover { background: #0056b3; transform: translateY(-2px); }
+        .sheet-btn.active { background: #28a745; box-shadow: 0 0 0 4px rgba(40,167,69,0.2); }
 
-        /* Список деталей */
-        .parts-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 20px; }
-        .part-card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; }
-        .part-info { font-size: 14px; }
-        .part-info b { font-size: 16px; color: #d9534f; display: block; margin-bottom: 5px; }
-        .print-btn { background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .parts-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 20px; }
+        .part-card { border: 1px solid #e0e0e0; padding: 15px; border-radius: 10px; background: #fff; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .part-card:hover { border-color: #007bff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .part-info b { font-size: 1.2em; color: #2c3e50; display: block; }
+        .part-info span { color: #666; font-size: 0.9em; }
+        
+        .print-btn { background: #28a745; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .print-btn:hover { background: #218838; }
 
-        /* НАСТРОЙКИ ПЕЧАТИ (СТРОГО 80x60 мм) */
+        /* ЭТИКЕТКА 80x60 мм */
         @page { size: 80mm 60mm; margin: 0; }
-        
         #print-area { display: none; }
         
         .label-sticker {
-            width: 80mm; height: 60mm; 
-            background: white; color: black;
-            box-sizing: border-box; padding: 2mm;
-            position: relative; overflow: hidden;
-            font-family: Arial, sans-serif;
-            border: 1px solid #ccc; /* Граница для предпросмотра на экране */
+            width: 80mm; height: 60mm; background: white; 
+            padding: 2mm; box-sizing: border-box;
+            position: relative; font-family: Arial, sans-serif; overflow: hidden;
+            border: 1px solid #eee; /* Видно только в браузере */
         }
 
-        /* Шапка с логотипом TABRIZ GROUP */
-        .header-box { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1mm; border-bottom: 1px solid #000; padding-bottom: 1mm;}
-        .logo-main { font-size: 18px; font-weight: 900; letter-spacing: 1px; margin-left: 2mm;}
-        .logo-main span { font-weight: normal; font-size: 10px; }
-        .logo-academy { font-size: 6px; font-weight: bold; text-align: center; line-height: 1; width: 20mm; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #000; padding-bottom: 1mm; }
+        .logo-txt { font-size: 18px; font-weight: 900; }
+        .logo-sub { font-size: 10px; font-weight: normal; }
+        .academy-box { font-size: 7px; text-align: center; font-weight: bold; line-height: 1; }
 
-        /* Информационный блок */
-        .info-block { font-size: 9px; line-height: 1.1; font-weight: bold; width: 55mm; }
-        .info-row { display: flex; justify-content: space-between; padding-right: 2mm; }
+        .data-row { font-size: 10px; font-weight: bold; margin-top: 1mm; line-height: 1.2; }
+        .main-size { font-size: 24px; font-weight: bold; text-align: center; margin: 4mm 0; }
 
-        /* Центральный блок размеров и ПВХ */
-        .center-block { width: 55mm; margin-top: 2mm; }
-        .pvc-row { display: flex; justify-content: space-between; margin: 1px 0; }
-        .pvc-item { border: 1px solid black; font-size: 8px; width: 45%; text-align: center; padding: 1px 0; }
-        .main-dim { font-size: 22px; font-weight: bold; text-align: center; margin: 0; line-height: 1; letter-spacing: -0.5px; }
+        .drawing { 
+            position: absolute; bottom: 4mm; left: 4mm; 
+            width: 35mm; height: 15mm; border: 1px solid black;
+        }
+        .dim { position: absolute; font-size: 8px; font-weight: bold; }
+        .dim-x { bottom: -12px; left: 40%; }
+        .dim-y { right: -15px; top: 35%; transform: rotate(90deg); }
 
-        /* Чертёж детали (слева внизу) */
-        .drawing-wrapper { position: absolute; bottom: 2mm; left: 10mm; width: 25mm; height: 12mm; border: 1.5px solid black; }
-        .dim-lbl { position: absolute; font-size: 6px; font-weight: bold; }
-        .dl-top { top: -6px; left: 30%; }
-        .dl-bot { bottom: -12px; left: 30%; text-align: center; }
-        .dl-lft { left: -12px; top: 15%; transform: rotate(-90deg); }
-        .dl-rgt { right: -12px; top: 15%; transform: rotate(90deg); text-align: center; }
-
-        /* QR-коды (справа) */
-        .qr-column { position: absolute; right: 2mm; top: 12mm; display: flex; flex-direction: column; gap: 2mm; align-items: center; }
-        .qr-item { text-align: center; }
-        .qr-item div { width: 14mm; height: 14mm; }
-        .qr-code-text { font-size: 7px; font-family: monospace; display: block; margin-top: 1px; }
-
-        .timestamp { position: absolute; right: 2mm; bottom: 1mm; font-size: 6px; }
-
-        /* Иконки присадок */
-        .icons-box { position: absolute; bottom: 2mm; left: 45mm; display: flex; flex-direction: column; gap: 1px; }
-        .icon-fake { width: 10px; height: 10px; border: 1px solid #000; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="2" fill="black"/></svg>') center/cover; }
+        .qr-side { position: absolute; right: 2mm; top: 15mm; text-align: center; }
+        .qr-box { width: 16mm; height: 16mm; margin-bottom: 2mm; }
+        .qr-label { font-size: 7px; display: block; font-family: monospace; }
+        
+        .time-stamp { position: absolute; right: 2mm; bottom: 1mm; font-size: 7px; color: #444; }
 
         @media print {
             .no-print { display: none !important; }
             #print-area { display: block; }
-            body { padding: 0; background: white; }
-            .label-sticker { border: none; margin: 0; page-break-after: always; }
+            .label-sticker { border: none; page-break-after: always; }
         }
     </style>
 </head>
@@ -88,18 +68,17 @@
 
 <div class="no-print">
     <div class="panel">
-        <h2>1. Загрузка файла кроя (.CUT)</h2>
-        <input type="file" id="fileInput" accept=".CUT" style="font-size: 16px;">
-        <div id="fileInfo" style="margin-top: 10px; font-weight: bold; color: #007bff;"></div>
+        <h2>1. Файл заказа (.CUT)</h2>
+        <input type="file" id="fileInput" accept=".CUT">
     </div>
 
     <div class="panel" id="sheetsPanel" style="display: none;">
-        <h2>2. Выберите лист</h2>
+        <h2>2. Выберите лист для раскроя</h2>
         <div class="sheets-grid" id="sheetsContainer"></div>
     </div>
 
     <div class="panel" id="partsPanel" style="display: none;">
-        <h2 id="partsTitle">3. Детали на листе</h2>
+        <h2 id="partsTitle">3. Список деталей</h2>
         <div class="parts-list" id="partsContainer"></div>
     </div>
 </div>
@@ -107,178 +86,122 @@
 <div id="print-area"></div>
 
 <script>
-    let xmlData = null;
-    let objectiveShapes = []; 
-    let projectData = { name: "Неизвестно", material: "ЛДСП" };
+    let objectiveShapes = {}; 
+    let projectInfo = { name: "", material: "" };
 
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        document.getElementById('fileInfo').innerText = "Загружен: " + file.name;
-        
         const reader = new FileReader();
         reader.onload = function(event) {
             const parser = new DOMParser();
-            xmlData = parser.parseFromString(event.target.result, "text/xml");
+            const xml = parser.parseFromString(event.target.result, "text/xml");
             
-            // Сохраняем общие данные проекта
-            const projNode = xmlData.querySelector('Project');
-            const dataNode = xmlData.querySelector('Data');
-            if (projNode) projectData.name = projNode.getAttribute('Name');
-            if (dataNode) projectData.material = dataNode.getAttribute('TypeName');
+            // Название проекта (Листа) и материал 
+            const projectNode = xml.querySelector('Project');
+            const dataNode = xml.querySelector('Data');
+            projectInfo.name = projectNode ? projectNode.getAttribute('Name') : "Заказ";
+            projectInfo.material = dataNode ? dataNode.getAttribute('TypeName') : "ЛДСП";
 
-            // Сохраняем исходные размеры и названия деталей из массива Objective
-            objectiveShapes = Array.from(xmlData.querySelectorAll('Objective Shape'));
-            
-            renderSheets();
+            // Собираем базу эталонных деталей (Objective -> Shape) 
+            const shapes = xml.querySelectorAll('Objective Shape');
+            objectiveShapes = {};
+            shapes.forEach((s, index) => {
+                objectiveShapes[index] = {
+                    name: s.getAttribute('Name'),
+                    x: s.getAttribute('X'),
+                    y: s.getAttribute('Y')
+                };
+            });
+
+            renderSheets(xml);
         };
         reader.readAsText(file);
     });
 
-    // Отрисовка кнопок для каждого листа (Layout)
-    function renderSheets() {
+    function renderSheets(xml) {
         document.getElementById('sheetsPanel').style.display = 'block';
-        document.getElementById('partsPanel').style.display = 'none';
-        
         const container = document.getElementById('sheetsContainer');
         container.innerHTML = '';
         
-        const layouts = xmlData.querySelectorAll('Layout');
+        const layouts = xml.querySelectorAll('Layout');
         layouts.forEach((layout, index) => {
             const btn = document.createElement('button');
             btn.className = 'sheet-btn';
-            btn.innerText = `Лист №${index + 1}`;
+            btn.innerText = `ЛИСТ №${index + 1} (${layout.getAttribute('X')}x${layout.getAttribute('Y')})`;
             btn.onclick = () => {
-                // Подсветка активной кнопки
                 document.querySelectorAll('.sheet-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                
-                renderPartsList(layout, index + 1);
+                renderParts(layout, index + 1);
             };
             container.appendChild(btn);
         });
     }
 
-    // Отрисовка списка деталей для выбранного листа
-    function renderPartsList(layoutNode, sheetNumber) {
+    function renderParts(layoutNode, num) {
         document.getElementById('partsPanel').style.display = 'block';
-        document.getElementById('partsTitle').innerText = `3. Детали на Листе №${sheetNumber}`;
-        
+        document.getElementById('partsTitle').innerText = `3. Детали на листе №${num}`;
         const container = document.getElementById('partsContainer');
         container.innerHTML = '';
 
-        // Ищем все конечные детали (Part с атрибутом UID) на этом листе
         const parts = layoutNode.querySelectorAll('Part[UID]');
-        
-        if (parts.length === 0) {
-            container.innerHTML = '<p>На этом листе нет деталей для кроя.</p>';
-            return;
-        }
-
-        parts.forEach((part, partIndex) => {
-            const uid = parseInt(part.getAttribute('UID'));
-            const shape = objectiveShapes[uid];
-            
-            if (!shape) return; // Защита от ошибок
-
-            const partName = shape.getAttribute('Name');
-            const x = shape.getAttribute('X');
-            const y = shape.getAttribute('Y');
+        parts.forEach(part => {
+            const uid = part.getAttribute('UID');
+            const data = objectiveShapes[uid];
+            if (!data) return;
 
             const card = document.createElement('div');
             card.className = 'part-card';
             card.innerHTML = `
                 <div class="part-info">
-                    <b>№ ${partName}</b>
-                    Размер: ${x} x ${y} мм
+                    <b>${data.name}</b>
+                    <span>${data.x} x ${data.y} мм</span>
                 </div>
-                <button class="print-btn" onclick="printLabel(${uid})">🖨 Печать</button>
+                <button class="print-btn" onclick="printLabel('${uid}')">Печать</button>
             `;
             container.appendChild(card);
         });
     }
 
-    // Генерация и печать этикетки
     function printLabel(uid) {
-        const printArea = document.getElementById('print-area');
-        const shape = objectiveShapes[uid];
-        
-        const partName = shape.getAttribute('Name');
-        const x = shape.getAttribute('X');
-        const y = shape.getAttribute('Y');
+        const data = objectiveShapes[uid];
+        const area = document.getElementById('print-area');
+        const now = new Date();
+        const dateStr = now.toLocaleString('ru-RU').replace(',', '');
 
-        const d = new Date();
-        const dateStr = `${d.getFullYear()} ${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-
-        printArea.innerHTML = `
+        area.innerHTML = `
             <div class="label-sticker">
-                
-                <div class="header-box">
-                    <div class="logo-main">TABRIZ <span>GROUP</span></div>
-                    <div class="logo-academy">
-                        MUSTAFAYEV<br>ACADEMY
-                    </div>
+                <div class="header">
+                    <div class="logo-txt">TABRIZ <span class="logo-sub">GROUP</span></div>
+                    <div class="academy-box">MUSTAFAYEV<br>ACADEMY</div>
                 </div>
-
-                <div class="info-block">
-                    <div>Mat:${projectData.material}</div>
-                    <div>№ :${partName}</div>
-                    <div class="info-row">
-                        <span>Model:${projectData.name}</span>
-                        <span>Soni:1</span>
-                    </div>
-                    <div>Nomi:Утолщенка РОВЕР</div>
+                <div class="data-row">
+                    Mat: ${projectInfo.material}<br>
+                    №: ${projectInfo.name}<br>
+                    Model: Модель 9 <span style="margin-left:10mm">Soni: 1</span><br>
+                    Nomi: ${data.name}
                 </div>
-
-                <div class="center-block">
-                    <div class="pvc-row">
-                        <div class="pvc-item">ПВХ 0.4 / 19</div>
-                        <div class="pvc-item">ПВХ 0.4 / 19</div>
-                    </div>
-                    <div class="main-dim">${x} x ${y}</div>
-                    <div class="pvc-row">
-                        <div class="pvc-item">ПВХ 2 / 19</div>
-                        <div class="pvc-item">ПВХ 2 / 19</div>
-                    </div>
+                <div class="main-size">${data.x} x ${data.y}</div>
+                <div class="drawing">
+                    <div class="dim dim-x">${data.x}</div>
+                    <div class="dim dim-y">${data.y}</div>
                 </div>
-
-                <div class="drawing-wrapper">
-                    <div class="dim-lbl dl-top">(X) 2</div>
-                    <div class="dim-lbl dl-bot">(X) 2<br><span style="font-weight:normal">${x}.5</span></div>
-                    <div class="dim-lbl dl-lft">(X) 2</div>
-                    <div class="dim-lbl dl-rgt">(X) 2<br><span style="font-weight:normal">${y}.3</span></div>
+                <div class="qr-side">
+                    <div id="q1" class="qr-box"></div>
+                    <span class="qr-label">01_025_1_1</span>
+                    <div id="q2" class="qr-box" style="margin-top:2mm"></div>
+                    <span class="qr-label">01_025_1_2</span>
                 </div>
-
-                <div class="icons-box">
-                    <div class="icon-fake"></div>
-                    <div class="icon-fake"></div>
-                    <div class="icon-fake"></div>
-                </div>
-
-                <div class="qr-column">
-                    <div class="qr-item">
-                        <div id="qr1"></div>
-                        <span class="qr-code-text">01_025_1_1</span>
-                    </div>
-                    <div class="qr-item">
-                        <div id="qr2"></div>
-                        <span class="qr-code-text">01_025_1_2</span>
-                    </div>
-                </div>
-
-                <div class="timestamp">${dateStr}</div>
+                <div class="time-stamp">${dateStr}</div>
             </div>
         `;
 
-        // Генерация QR
-        new QRCode(document.getElementById("qr1"), { text: partName + "_1", width: 52, height: 52, correctLevel: QRCode.CorrectLevel.L });
-        new QRCode(document.getElementById("qr2"), { text: partName + "_2", width: 52, height: 52, correctLevel: QRCode.CorrectLevel.L });
+        new QRCode(document.getElementById("q1"), { text: data.name + "_1", width: 60, height: 60 });
+        new QRCode(document.getElementById("q2"), { text: data.name + "_2", width: 60, height: 60 });
 
-        // Печать с небольшой задержкой для отрисовки QR
-        setTimeout(() => { window.print(); }, 300);
+        setTimeout(() => { window.print(); }, 250);
     }
 </script>
-
 </body>
 </html>
