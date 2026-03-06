@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Генератор Этикеток - AutoCUT</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+        .controls { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        /* Сетка этикеток */
+        #labels-container { display: grid; grid-template-columns: repeat(auto-fill, 400px); gap: 20px; }
+
+        /* Стили самой этикетки (по твоему образцу) */
+        .label-card { 
+            width: 380px; height: 250px; background: white; border: 1px solid #000; 
+            padding: 10px; position: relative; box-sizing: border-box; overflow: hidden;
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000; padding-bottom: 5px; }
+        .logo { font-weight: bold; font-size: 18px; }
+        
+        .details { margin-top: 10px; font-size: 14px; line-height: 1.2; }
+        .main-size { font-size: 28px; font-weight: bold; text-align: center; margin: 15px 0; border: 2px solid #000; padding: 5px; }
+        
+        .edge-info { display: flex; justify-content: space-around; font-size: 12px; font-weight: bold; }
+        .footer-info { position: absolute; bottom: 10px; left: 10px; font-size: 10px; color: #555; }
+        
+        .qr-placeholder { position: absolute; right: 10px; bottom: 10px; width: 60px; height: 60px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 8px; text-align: center; }
+
+        @media print {
+            .controls { display: none; }
+            body { background: white; padding: 0; }
+            .label-card { page-break-inside: avoid; margin-bottom: 0; border: 1px solid #eee; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="controls">
+    <h2>Печать этикеток из .CUT файла</h2>
+    <input type="file" id="fileInput" accept=".CUT,.xml">
+    <button onclick="window.print()" style="margin-left: 20px; padding: 5px 15px; cursor: pointer;">Печать (PDF)</button>
+    <p><small>Загрузите файл проекта (например, "Федя ого.CUT")</small></p>
+</div>
+
+<div id="labels-container">
+    </div>
+
+<script>
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
+            generateLabels(xmlDoc);
+        };
+        reader.readAsText(file);
+    });
+
+    function generateLabels(xml) {
+        const container = document.getElementById('labels-container');
+        container.innerHTML = ''; // Очистить старые
+
+        // Извлекаем общую информацию проекта 
+        const projectName = xml.querySelector('Project').getAttribute('Name');
+        const material = xml.querySelector('Data').getAttribute('TypeName');
+        const date = xml.querySelector('Project').getAttribute('Update');
+
+        // Ищем все детали в блоке Objective [cite: 10, 11]
+        const shapes = xml.querySelectorAll('Objective Shape');
+
+        shapes.forEach(shape => {
+            const count = parseInt(shape.getAttribute('Count'));
+            if (count > 0) {
+                const name = shape.getAttribute('Name');
+                const x = shape.getAttribute('X');
+                const y = shape.getAttribute('Y');
+                const order = shape.getAttribute('Order');
+
+                // Создаем по одной этикетке для каждой копии детали
+                for (let i = 1; i <= count; i++) {
+                    const label = document.createElement('div');
+                    label.className = 'label-card';
+                    label.innerHTML = `
+                        <div class="header">
+                            <div class="logo">TABRIZ <small>GROUP</small></div>
+                            <div style="font-size: 10px; text-align: right;">${order}</div>
+                        </div>
+                        <div class="details">
+                            <div><strong>Mat:</strong> ${material} </div>
+                            <div><strong>№:</strong> ${name} | <strong>Soni:</strong> ${i} из ${count}</div>
+                            <div><strong>Project:</strong> ${projectName} </div>
+                        </div>
+                        <div class="main-size">
+                            ${x} x ${y}
+                        </div>
+                        <div class="edge-info">
+                            <span>ПВХ 0.4 / 19</span>
+                            <span>ПВХ 2.0 / 19</span>
+                        </div>
+                        <div class="footer-info">
+                            Дата: ${date}
+                        </div>
+                        <div class="qr-placeholder">QR CODE<br>${name}</div>
+                    `;
+                    container.appendChild(label);
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
